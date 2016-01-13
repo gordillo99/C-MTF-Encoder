@@ -1,0 +1,48 @@
+#!/bin/bash
+#TESTS THE DECODING FUNCTION
+
+if [ "$#" -ne 2 ]; then
+    echo "Illegal number of parameters. Expected 2 parameters (PATH_TO_C_SOURCE_FILE/ and PATH_TO_TESTS/tests/)"
+    exit
+fi
+
+make
+
+# array holding the possible numbers for the tests
+declare -a numbers=("00" "01" "02" "03" "04" "05" "06" "07" "08" "09" "10" "11" "12" "13" "14" "15" "16" "17" "18" "19")
+
+# loop to use each element in array
+for i in "${numbers[@]}"
+do
+	cat $2/test$i.mtf > t$i.mtf #create a new .txt file with the contents of the actual test txt file
+
+if [ $? -eq 0 ]; then  
+    output=$($1/mtfdecode t$i.mtf) #runs the program
+    if [ $? -eq 0 ]; then #notifies the user of what happened
+        echo Program ran with no problems.
+	output=$(diff t$i.txt $2/test$i.txt) #diffs the expected test result and the current test result and gathers output 
+    	if [ $? -eq 0 ]; then #indicates status of test cases
+        	echo Test Case $i PASSED 
+    	else
+        	echo Test Case $i FAILED
+        	echo $output
+    	fi  
+    else  #indicates errors
+        echo Program error.
+        echo output
+    fi
+	#removes files that were created
+    if [ -f t$i.txt ]; then
+        rm t$i.txt
+    fi
+
+    if [ -f t$i.mtf ]; then
+        rm t$i.mtf
+    fi  
+else
+
+echo The test file for Test Case $i could not be found.
+
+fi
+done
+make clean
